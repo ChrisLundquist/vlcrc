@@ -11,9 +11,13 @@ module VLCRC
   class VLC
 
     # Attempt to connect to the given TCP socket, return new VLC object.
-    def initialize( host='localhost', port=1234 )
+    # the opts parameter is a string that contains parameters to the VLC arg line.
+    # An example of opts could be '--no-video' to supress the video output.
+    def initialize( host='localhost', port=1234, bin_path='vlc', opts='' )
       @host = 'localhost'
       @port = port
+      @bin = bin_path
+      @extra_args ||= opts
       connect
     end
 
@@ -36,9 +40,11 @@ module VLCRC
     def launch
       return false if connected?
       if RUBY_PLATFORM =~ /(win|w)(32|64)$/
-        %x{ start vlc --lua-config "rc={host='#{@host}:#{@port}',flatplaylist=0}" >nul 2>&1 }
+        %x{ start #{@bin} #{@extra_args} --lua-config "rc={host='#{@host}:#{@port}',flatplaylist=0}" >nul 2>&1 }
+      elsif RUBY_PLATFORM =~ /darwin/ && File.exists?('/Applications/VLC.app/Contents/MacOS/VLC') && @bin == 'vlc'
+        %x{ /Applications/VLC.app/Contents/MacOS/VLC #{@extra_args} --extraintf=lua --lua-config "rc={host='#{@host}:#{@port}',flatplaylist=0}" >/dev/null 2>&1 & }
       else
-        %x{ vlc --lua-config "rc={host='#{@host}:#{@port}',flatplaylist=0}" >/dev/null 2>&1 & }
+        %x{ #{@bin} #{@extra_args} --lua-config "rc={host='#{@host}:#{@port}',flatplaylist=0}" >/dev/null 2>&1 & }
       end
       # TODO pre-lua rc interface (VLC version detection?)
       true
@@ -109,6 +115,17 @@ module VLCRC
     # Open a given file in the current media player instance.
     def media=( file ) ask "add file://#{file}", false end
 
+    # Open a given stream
+    def stream=( stream ) ask "add #{stream}", false end
+
+    # Enqueues in the playlist
+    def add_media( file ) ask "enqueue file://#{file}", false end
+
+    # Enqueues a stream
+    def add_stream( stream )
+      ask "enqueue #{stream}"
+    end
+
     # Get the currently selected subtitle track.
     def subtitle() ask( "strack" ).to_i end
 
@@ -137,18 +154,31 @@ module VLCRC
       playlist_id = raw.scan( /\| (\d*) - Playlist/ )[0][0]
       queue = long_ask "playlist #{playlist_id}"
       queue = queue.split( "|" ).map do |item|
-        item.scan %r{(\d*) - (file:\/\/)?(.*) \((.*)\)( \[played (\d*))?}
+        item.scan %r{(\d*) - (\w+:\/\/)?(.*)}
       end
-      queue.reject{ |i| i.empty? }.map{ |i| i[0] }.map do |i|
-        [i[0], i[2], i[3], i[5]]
-      end
+      queue.each do |i| 
+        i.each do |j|
+          unless j[1].nil?
+           j[2] = j[2] << j[1] unless j[1].start_with? 'file://'
+           k = j[2].scan %r{(.*) \((\.*)\)( \[played \d*)?}
+           [j[0], j[2]]
+          end
+        end
+      end 
     end
 
     # Set the contents of the playlist.
     def playlist=( queue )
       ask "clear", false
       queue.each do |file|
-        ask "enqueue file://#{file}", false
+        # stream is not local. If contains :// then protocol is included
+        if file.include? '://'
+          uri = file
+        else
+          uri = 'file://' >> file 
+        end
+        puts uri
+        ask "enqueue #{uri}", false
       end
     end
 

@@ -7,3 +7,4 @@ pkg
 doc
 spec/*.log
 .yardoc
+vlcrc*.gem
