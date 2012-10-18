@@ -6,7 +6,7 @@ description: "Allows control of a VLC instance through a ruby object. Uses VLC's
 
 author: Carl Suster
 email: carl.suster@gmail.com
-homepage: 'http://github.com/carl-suster/vlcrc'
+homepage: 'http://github.com/arcresu/vlcrc'
 
 features:
   Playlist management: false

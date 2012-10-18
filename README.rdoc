@@ -1,4 +1,7 @@
 = VLC-RC: a ruby wrapper to the VLC TCP interface
+
+    NOTE: This project will get fixed up as soon as I have a chance
+
 Allows control of a VLC instance through a ruby object. Uses VLC's built-in TCP interface to send commands and recieve information.
 
 * Main commands (play/pause/stop/etc.)
@@ -55,22 +58,6 @@ To run the specs, you'll need to add at least one video file to spec/data (anyth
 This is pretty basic, there are a few main methods demonstrated below. If you want more control, then go for the full shebang: use VLC's Telnet interface.
 
   vlcrc --help
-
-== Requires
-VLC-RC needs all this stuff
-
-* ruby (>= 1.9.2)
-* rubygems (>= 1.3.6)
-* rspec (~> 2.5.0, development)
-* bundler (~> 1.0.0, development)
-* rake (>= 0, development)
-* trollop (~> 1.16.2)
-* vlc (>= 1.1.0)
-
-== Acknowledgement
-Thanks to these sources, used as references during development
-
-* https://videolan.org/vlc
 
 == License
 
