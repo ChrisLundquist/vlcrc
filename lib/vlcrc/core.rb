@@ -2,6 +2,39 @@ require 'socket'
 require 'timeout'
 
 module VLCRC
+  module Volume
+    SCALE_FACTOR = 5.12
+    # VLC volume is from 0..512
+
+    def to_vlc_volume(percent)
+      percent * SCALE_FACTOR
+    end
+
+    def from_vlc_volume(vol)
+      vol / SCALE_FACTOR
+    end
+
+    def volume()
+      volume = ask "volume"
+      from_vlc_volume(volume.to_i)
+    end
+
+    def volume=(vol)
+      volume = ask "volume #{to_vlc_volume(vol)}"
+      from_vlc_volume(volume.to_i)
+    end
+
+    def volup(increment)
+      volume = ask "volup #{increment}"
+      from_vlc_volume(volume.to_i)
+    end
+
+    def voldown(increment)
+      volume = ask "voldown #{increment}"
+      from_vlc_volume(volume.to_i)
+    end
+  end
+
 
   # Number of seconds to wait for a response before deciding that there
   # is no message waiting in the socket.
@@ -9,6 +42,7 @@ module VLCRC
 
   # Bindings for accessing VLC media player over a TCP socket.
   class VLC
+    include VLCRC::Volume
 
     # Attempt to connect to the given TCP socket, return new VLC object.
     # the opts parameter is a string that contains parameters to the VLC arg line.
@@ -99,35 +133,6 @@ module VLCRC
     def search(string)
       # TODO
       restults = ask "search #{string}"
-    end
-
-    # VLC volume is from 0..512
-    def to_vlc_volume(percent)
-      percent * 5.12
-    end
-
-    def from_vlc_volume(vol)
-      vol / 5.12
-    end
-
-    def volume()
-      volume = ask "volume"
-      from_vlc_volume(volume.to_i)
-    end
-
-    def volume=(vol)
-      volume = ask "volume #{to_vlc_volume(vol)}"
-      from_vlc_volume(volume.to_i)
-    end
-
-    def volup(increment)
-      volume = ask "volup #{increment}"
-      from_vlc_volume(volume.to_i)
-    end
-
-    def voldown(increment)
-      volume = ask "voldown #{increment}"
-      from_vlc_volume(volume.to_i)
     end
 
     # Get the currently playing media.
@@ -259,5 +264,4 @@ module VLCRC
       return clear
     end
   end
-
 end
