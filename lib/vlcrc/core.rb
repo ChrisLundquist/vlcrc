@@ -66,23 +66,20 @@ module VLCRC
     end
 
     # Get current playing state (i.e. playing or stopped).
-    def playing
+    def playing?
       on = ask "is_playing"
       return false unless on
       [false, true][on.to_i]
     end
 
     # Toggle pause.
-    def pause() ask "pause", false end
+    def pause!() ask "pause", false end
 
-    # Set current playing state.
-    def playing=( play )
-      if play
-        ask "play", false
-      else
-        ask "stop", false
-      end
-    end
+    # Fire audio lazers
+    def play!() ask "play", false end
+
+    # Ok Stop Dots
+    def stop!() ask "stop", false end
 
     # Get current position in the file (in ms).
     def position() ask( "get_time" ).to_i*1000 end
@@ -99,9 +96,43 @@ module VLCRC
     # Close the current TCP connection.
     def disconnect() @socket, @vlc_version = nil, nil if ask "quit" end
 
+    def search(string)
+      # TODO
+      restults = ask "search #{string}"
+    end
+
+    # VLC volume is from 0..512
+    def to_vlc_volume(percent)
+      percent * 5.12
+    end
+
+    def from_vlc_volume(vol)
+      vol / 5.12
+    end
+
+    def volume()
+      volume = ask "volume"
+      from_vlc_volume(volume.to_i)
+    end
+
+    def volume=(vol)
+      volume = ask "volume #{to_vlc_volume(vol)}"
+      from_vlc_volume(volume.to_i)
+    end
+
+    def volup(increment)
+      volume = ask "volup #{increment}"
+      from_vlc_volume(volume.to_i)
+    end
+
+    def voldown(increment)
+      volume = ask "voldown #{increment}"
+      from_vlc_volume(volume.to_i)
+    end
+
     # Get the currently playing media.
     def media()
-      if playing
+      if playing?
         status = long_ask "status"
         return false unless status
         path = status.scan( /file:\/\/(.*) \)/ )
@@ -144,6 +175,7 @@ module VLCRC
 
     # Go back to previous item in the playlist.
     def prev() ask "prev", false end
+    alias :previous :prev
 
     # Go to the item in the playlist with the specified index.
     def jump(i) ask "goto #{i}", false end

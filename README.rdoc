@@ -17,7 +17,7 @@ VLC-RC is a library for controlling VLC and includes a CLI wrapper for VLC's bui
   require 'vlcrc'
   
   # Create a new VLC object, which attempts to connect
-  vlc = VLCRC::VLC.new localhost, 1234
+  vlc = VLCRC::VLC.new "localhost", 1234
   
   # Launch an instance of VLC bound to the above socket
   vlc.launch
